@@ -53,6 +53,7 @@ class EditProfileAdminForm(Form):
 
 
 class PostForm(Form):
+    title = TextAreaField(u'文章标题：', validators=[Required()])
     body = TextAreaField(u"对于建筑节能，用文章给出你的观点吧！", validators=[Required()])
     submit = SubmitField(u'提交')
 

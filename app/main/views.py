@@ -5,7 +5,7 @@ from flask.ext.sqlalchemy import get_debug_queries
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm,\
     CommentForm
-from .. import db
+from .. import db, qiniu_store
 from ..models import Permission, Role, User, Post, Comment
 from ..decorators import admin_required, permission_required
 import os
@@ -43,7 +43,7 @@ def index():
     form = PostForm()
     if current_user.can(Permission.WRITE_ARTICLES) and \
             form.validate_on_submit():
-        post = Post(body=form.body.data,
+        post = Post(title=form.title.data, body=form.body.data,
                     author=current_user._get_current_object())
         db.session.add(post)
         return redirect(url_for('.index'))
@@ -152,9 +152,11 @@ def edit(id):
     form = PostForm()
     if form.validate_on_submit():
         post.body = form.body.data
+        post.title = form.title.data
         db.session.add(post)
         flash('The post has been updated.')
         return redirect(url_for('.post', id=post.id))
+    form.title.data = post.title
     form.body.data = post.body
     return render_template('edit_post.html', form=form)
 
@@ -291,20 +293,23 @@ def ckupload():
         fname, fext = os.path.splitext(fileobj.filename)
         rnd_name = '%s%s' % (gen_rnd_filename(), fext)
 
-        filepath = os.path.join(main.static_folder, 'upload', rnd_name)
+        qiniu_store.save(fileobj, rnd_name)
+        url = qiniu_store.url(rnd_name)
 
-        dirname = os.path.dirname(filepath)
-        if not os.path.exists(dirname):
-            try:
-                os.makedirs(dirname)
-            except:
-                error = str(dirname)+'ERROR_CREATE_DIR'
-        elif not os.access(dirname, os.W_OK):
-            error = 'ERROR_DIR_NOT_WRITEABLE'
-
-        if not error:
-            fileobj.save(filepath)
-            url = url_for('.static', filename='%s/%s' % ('upload', rnd_name))
+        # filepath = os.path.join(main.static_folder, 'upload', rnd_name)
+        #
+        # dirname = os.path.dirname(filepath)
+        # if not os.path.exists(dirname):
+        #     try:
+        #         os.makedirs(dirname)
+        #     except:
+        #         error = str(dirname)+'ERROR_CREATE_DIR'
+        # elif not os.access(dirname, os.W_OK):
+        #     error = 'ERROR_DIR_NOT_WRITEABLE'
+        #
+        # if not error:
+        #     fileobj.save(filepath)
+        #     url = url_for('.static', filename='%s/%s' % ('upload', rnd_name))
     else:
         error = 'post error'
 

@@ -6,12 +6,14 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
 from flask.ext.pagedown import PageDown
 from config import config
+from flask_qiniustorage import Qiniu
 
 bootstrap = Bootstrap()
 mail = Mail()
 moment = Moment()
 db = SQLAlchemy()
 pagedown = PageDown()
+qiniu_store = Qiniu()
 
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
@@ -29,6 +31,8 @@ def create_app(config_name):
     db.init_app(app)
     login_manager.init_app(app)
     pagedown.init_app(app)
+    qiniu_store.init_app(app)
+
 
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
         from flask.ext.sslify import SSLify

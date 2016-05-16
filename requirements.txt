@@ -2,3 +2,4 @@
 Flask-SSLify==0.1.4
 gunicorn==18.0
 psycopg2==2.5.1
+Flask-QiniuStorage==0.9.3
